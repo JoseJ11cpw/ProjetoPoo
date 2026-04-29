@@ -4,6 +4,9 @@ pygame.init()
 
 screen=pygame.display.set_mode((800,600))
 Personagem1=pygame.image.load("imagens/Personagem1.png")
+arvore = pygame.image.load("imagens/arvore.png").convert_alpha()
+arvore = pygame.transform.scale(arvore, (235, 254))
+
 clock = pygame.time.Clock()
 
 running = True
@@ -25,6 +28,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
     if key[pygame.K_a]:
         x -= 5
         direcao = LEFT
@@ -42,6 +46,8 @@ while running:
         direcao=FRONT
     screen.fill((255,255,255))
     screen.blit(Personagem1,(x,y), (x_sprite+animacao,y_sprite+direcao,89,115))
+    for i in range(4):
+        screen.blit(arvore, (0, 0 + i * 120))
     animacao=0
     pygame.display.flip()
     
