@@ -1,38 +1,52 @@
 import pygame
-from Personagens import Jogador,Inimigo
+from mapa import Map
+from Personagens import Player
 
 pygame.init()
 
-screen = pygame.display.set_mode((800, 600))
+# ---------------- SCREEN ----------------
+SCREEN_W, SCREEN_H = 1920, 1080
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
-Personagem1 = Jogador(100, 100)
-Inimigo1 = Inimigo(300,300)
+# ---------------- MAPA ----------------
+game_map = Map("mapa.tmx")
 
-sprite_arvore = pygame.image.load("imagens/arvore.png").convert_alpha()
-sprite_arvore = pygame.transform.scale(sprite_arvore, (235, 254))
+print(game_map.map_h)
+# ---------------- PLAYER ----------------
+player = Player()
 
 running = True
 
 while running:
-    screen.fill((255,255,255))
-
-    keys = pygame.key.get_pressed()
-    Personagem1.move(keys)
-    Personagem1.animar()
-    Personagem1.draw(screen)
-    Inimigo1.draw(screen)
-    screen.blit(sprite_arvore, (500, 200))
-    pygame.draw.rect(screen, (255, 0, 0), (10, 10, 200, 20))  # fundo vermelho
-    pygame.draw.rect(screen, (0, 255, 0), (10, 10, Personagem1.vida * 2, 20))  # vida verde
+    clock.tick(60)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if abs(Personagem1.x - Inimigo1.x) < 40 and abs(Personagem1.y - Inimigo1.y) < 40:
-            Personagem1.vida -= 1
 
-    pygame.display.update()
-    clock.tick(60)
+    keys = pygame.key.get_pressed()
+
+    # UPDATE PLAYER
+    player.update(keys)
+
+    # ---------------- LIMITES DO MAPA ----------------
+    if player.x < 0:
+        player.x = 0
+    if player.y < 0:
+        player.y = 0
+
+    if player.x > 1920 - player.scaled_width:
+        player.x = 1920 - player.scaled_width
+
+    if player.y > 1080 - player.scaled_height:
+        player.y = 1080 - player.scaled_height
+
+    # ---------------- DESENHO ----------------
+
+    game_map.render(screen)
+    player.draw(screen)
+
+    pygame.display.flip()
 
 pygame.quit()

@@ -1,59 +1,88 @@
 import pygame
 
-def cortar_sprites(sheet, largura, altura):
-    sprites = []
-    for y in range(0, sheet.get_height() - altura + 1, altura):
-        for x in range(0, sheet.get_width() - largura + 1, largura):
-            rect = pygame.Rect(x, y, largura, altura)
-            sprites.append(sheet.subsurface(rect))
-    return sprites
 
-class Jogador:
-    def __init__(self, x, y):
-        self.sprite_sheet = pygame.image.load("imagens/Personagem1.png").convert_alpha()
-        self.frames = cortar_sprites(self.sprite_sheet, 102, 152)
-        self.frame_atual = 0
-        self.timer_animacao = 0
+class Player:
+    def __init__(self):
+        # ---------------- SPRITE ----------------
+        self.sprite = pygame.image.load("imagens/Personagem1.png").convert_alpha()
 
-        self.x = x
-        self.y = y
-        self.tamanho = 40
-        self.cor = (255, 0, 0)
-        self.velocidade = 10
-        self.vida = 100
+        self.FRAME_COLS = 4
+        self.FRAME_ROWS = 4
 
-    def move(self, keys):
-        if keys[pygame.K_w]:
-            self.y -= self.velocidade
-        if keys[pygame.K_s]:
-            self.y += self.velocidade
+        self.SPRITE_WIDTH = 408
+        self.SPRITE_HEIGHT = 611
+
+        self.frame_width = self.SPRITE_WIDTH // self.FRAME_COLS
+        self.frame_height = self.SPRITE_HEIGHT // self.FRAME_ROWS
+
+        # escala
+        self.scale = 0.7
+        self.scaled_width = int(self.frame_width * self.scale)
+        self.scaled_height = int(self.frame_height * self.scale)
+
+        # posição
+        self.x = 300
+        self.y = 300
+        self.speed = 5
+
+        # direção
+        self.DOWN = 0
+        self.LEFT = 2
+        self.RIGHT = 3
+        self.UP = 1
+
+        self.direction = self.DOWN
+
+        # animação
+        self.frame_index = 0
+        self.frame_timer = 0
+        self.frame_speed = 10
+
+    def update(self, keys):
+        moving = False
+
         if keys[pygame.K_a]:
-            self.x -= self.velocidade
+            self.x -= self.speed
+            self.direction = self.LEFT
+            moving = True
+
         if keys[pygame.K_d]:
-            self.x += self.velocidade
+            self.x += self.speed
+            self.direction = self.RIGHT
+            moving = True
+
+        if keys[pygame.K_w]:
+            self.y -= self.speed
+            self.direction = self.UP
+            moving = True
+
+        if keys[pygame.K_s]:
+            self.y += self.speed
+            self.direction = self.DOWN
+            moving = True
+
+        # animação
+        if moving:
+            self.frame_timer += 1
+            if self.frame_timer >= self.frame_speed:
+                self.frame_timer = 0
+                self.frame_index += 1
+                if self.frame_index >= self.FRAME_COLS:
+                    self.frame_index = 0
+        else:
+            self.frame_index = 0
 
     def draw(self, screen):
-        frame = self.frames[self.frame_atual]
+        frame = self.sprite.subsurface((
+            self.frame_index * self.frame_width,
+            self.direction * self.frame_height,
+            self.frame_width,
+            self.frame_height
+        ))
+
+        frame = pygame.transform.smoothscale(
+            frame,
+            (self.scaled_width, self.scaled_height)
+        )
+
         screen.blit(frame, (self.x, self.y))
-
-    def animar(self):
-        self.timer_animacao += 1
-
-        if self.timer_animacao >= 10:
-            self.frame_atual += 1
-            self.timer_animacao = 0
-
-        if self.frame_atual >= len(self.frames):
-            self.frame_atual = 0
-
-
-
-class Inimigo:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.tamanho = 70
-        self.cor = (0, 0, 0)
-
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.cor, (self.x, self.y, self.tamanho, self.tamanho))
