@@ -21,8 +21,8 @@ class Player:
         self.scaled_height = int(self.frame_height * self.scale)
 
         # posição
-        self.x = 300
-        self.y = 300
+        self.x = 950
+        self.y = 900
         self.speed = 5
 
         # direção
