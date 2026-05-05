@@ -10,9 +10,8 @@ screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
 # ---------------- MAPA ----------------
-game_map = Map("mapa.tmx")
+game_map=Map("mapa.tmx")
 
-print(game_map.map_h)
 # ---------------- PLAYER ----------------
 player = Player()
 

@@ -1,7 +1,5 @@
 import pygame
-import pytmx
 from pytmx.util_pygame import load_pygame
-
 
 class Map:
     def __init__(self, file):
@@ -12,6 +10,14 @@ class Map:
 
         self.surface = pygame.Surface((self.map_w, self.map_h))
         self.draw_map()
+
+        # colisões
+        self.collisions = []
+
+        for obj in self.tmx.objects:
+            if obj.name == "wall":
+                rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
+                self.collisions.append(rect)
 
     def draw_map(self):
         TILE = self.tmx.tilewidth
