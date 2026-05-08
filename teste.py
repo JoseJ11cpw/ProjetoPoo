@@ -52,8 +52,15 @@ class Jogador:
 
 # 1. SETUP
 pygame.init()
+pygame.mixer.init()
 screen = pygame.display.set_mode((800, 600))
 mapa_data, lista_paredes = carregar_mapa("mapa.tmx")
+
+
+pygame.mixer.music.load("musica/menu.ogg")
+pygame.mixer.music.set_volume(0.5)  # volume (0 a 1)
+pygame.mixer.music.play(-1)  # -1 = loop infinito
+
 
 rodando = True
 while rodando:

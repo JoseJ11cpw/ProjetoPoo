@@ -27,7 +27,7 @@ while running:
     keys = pygame.key.get_pressed()
 
     # UPDATE PLAYER
-    player.update(keys)
+    player.update(keys, game_map)
 
     # ---------------- LIMITES DO MAPA ----------------
     if player.x < 0:
@@ -44,6 +44,13 @@ while running:
     # ---------------- DESENHO ----------------
 
     game_map.render(screen)
+    scale_x = SCREEN_W / game_map.map_w
+    scale_y = SCREEN_H / game_map.map_h
+
+    for wall in game_map.collisions:
+
+        scaled_rect = pygame.Rect(wall.x * scale_x,wall.y * scale_y,wall.width * scale_x,wall.height * scale_y)
+
     player.draw(screen)
 
     pygame.display.flip()

@@ -38,30 +38,55 @@ class Player:
         self.frame_timer = 0
         self.frame_speed = 10
 
-    def update(self, keys):
+    def update(self, keys, game_map):
+        dx = 0
+        dy = 0
         moving = False
 
+        # -------- INPUT --------
         if keys[pygame.K_a]:
-            self.x -= self.speed
+            dx = -self.speed
             self.direction = self.LEFT
             moving = True
 
         if keys[pygame.K_d]:
-            self.x += self.speed
+            dx = self.speed
             self.direction = self.RIGHT
             moving = True
 
         if keys[pygame.K_w]:
-            self.y -= self.speed
+            dy = -self.speed
             self.direction = self.UP
             moving = True
 
         if keys[pygame.K_s]:
-            self.y += self.speed
+            dy = self.speed
             self.direction = self.DOWN
             moving = True
 
-        # animação
+        # -------- COLISÃO X --------
+        self.x += dx
+        player_rect = pygame.Rect(self.x, self.y, self.scaled_width, self.scaled_height)
+
+        for wall in game_map.collisions:
+            if player_rect.colliderect(wall):
+                if dx > 0:  # indo para direita
+                    self.x = wall.left - self.scaled_width
+                elif dx < 0:  # indo para esquerda
+                    self.x = wall.right
+
+        # -------- COLISÃO Y --------
+        self.y += dy
+        player_rect = pygame.Rect(self.x, self.y, self.scaled_width, self.scaled_height)
+
+        for wall in game_map.collisions:
+            if player_rect.colliderect(wall):
+                if dy > 0:  # descendo
+                    self.y = wall.top - self.scaled_height
+                elif dy < 0:  # subindo
+                    self.y = wall.bottom
+
+        # -------- ANIMAÇÃO --------
         if moving:
             self.frame_timer += 1
             if self.frame_timer >= self.frame_speed:
@@ -71,6 +96,8 @@ class Player:
                     self.frame_index = 0
         else:
             self.frame_index = 0
+        
+
 
     def draw(self, screen):
         frame = self.sprite.subsurface((
@@ -86,3 +113,5 @@ class Player:
         )
 
         screen.blit(frame, (self.x, self.y))
+    def get_rect(self):
+        return pygame.Rect(self.x, self.y, self.scaled_width, self.scaled_height)
