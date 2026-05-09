@@ -16,7 +16,7 @@ class Player:
         self.frame_height = self.SPRITE_HEIGHT // self.FRAME_ROWS
 
         # escala
-        self.scale = 0.7
+        self.scale = 0.4
         self.scaled_width = int(self.frame_width * self.scale)
         self.scaled_height = int(self.frame_height * self.scale)
 
@@ -38,6 +38,12 @@ class Player:
         self.frame_timer = 0
         self.frame_speed = 10
 
+        # HITBOX
+        self.hitbox_offset_x = 12
+        self.hitbox_offset_y = 30  #sobe/desce a hitbox
+        self.hitbox_width = self.scaled_width - 24
+        self.hitbox_height = 20 #altura da hitbox
+        
     def update(self, keys, game_map):
         dx = 0
         dy = 0
@@ -66,25 +72,40 @@ class Player:
 
         # -------- COLISÃO X --------
         self.x += dx
-        player_rect = pygame.Rect(self.x, self.y, self.scaled_width, self.scaled_height)
+        player_rect = self.get_rect()
 
         for wall in game_map.collisions:
             if player_rect.colliderect(wall):
-                if dx > 0:  # indo para direita
-                    self.x = wall.left - self.scaled_width
-                elif dx < 0:  # indo para esquerda
-                    self.x = wall.right
+
+                if dx > 0:
+                    self.x = (
+                        wall.left
+                        - self.hitbox_width
+                        - self.hitbox_offset_x
+                    )
+
+                if dx < 0:
+                    self.x = wall.right - self.hitbox_offset_x
 
         # -------- COLISÃO Y --------
         self.y += dy
-        player_rect = pygame.Rect(self.x, self.y, self.scaled_width, self.scaled_height)
+        player_rect = self.get_rect()
 
         for wall in game_map.collisions:
             if player_rect.colliderect(wall):
-                if dy > 0:  # descendo
-                    self.y = wall.top - self.scaled_height
-                elif dy < 0:  # subindo
-                    self.y = wall.bottom
+
+                if dy > 0:
+                    self.y = (
+                        wall.top
+                        - self.hitbox_height
+                        - (self.scaled_height - self.hitbox_offset_y)
+                    )
+
+                if dy < 0:
+                    self.y = (
+                        wall.bottom
+                        - (self.scaled_height - self.hitbox_offset_y)
+                    )
 
         # -------- ANIMAÇÃO --------
         if moving:
@@ -113,5 +134,12 @@ class Player:
         )
 
         screen.blit(frame, (self.x, self.y))
+
+
     def get_rect(self):
-        return pygame.Rect(self.x, self.y, self.scaled_width, self.scaled_height)
+        return pygame.Rect(
+            self.x + self.hitbox_offset_x,
+            self.y + self.scaled_height - self.hitbox_offset_y,
+            self.hitbox_width,
+            self.hitbox_height
+        )
