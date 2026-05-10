@@ -143,3 +143,13 @@ class Player:
             self.hitbox_width,
             self.hitbox_height
         )
+    def near_door(self, game_map):
+
+        player_rect = self.get_rect()
+
+        for door in game_map.doors:
+
+            if player_rect.colliderect(door):
+                return True
+
+        return False

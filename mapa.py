@@ -23,6 +23,21 @@ class Map:
             if obj.name == "wall":
                 rect = pygame.Rect( obj.x * self.scale_x,obj.y * self.scale_y,obj.width * self.scale_x, obj.height * self.scale_y)
                 self.collisions.append(rect)
+        
+        self.doors = []
+
+        for obj in self.tmx.objects:
+
+            if obj.name == "door":
+
+                rect = pygame.Rect(
+                    obj.x * self.scale_x,
+                    obj.y * self.scale_y,
+                    obj.width * self.scale_x,
+                    obj.height * self.scale_y
+                )
+
+                self.doors.append(rect)
 
     def draw_map(self):
         TILE = self.tmx.tilewidth
@@ -36,3 +51,7 @@ class Map:
         screen_width, screen_height = screen.get_size()
         scaled_surface = pygame.transform.scale(self.surface,(screen_width, screen_height))
         screen.blit(scaled_surface, (0, 0))
+
+        # DEBUG DAS PORTAS
+        for door in self.doors:
+            pygame.draw.rect(screen, (0,255,0), door, 2)

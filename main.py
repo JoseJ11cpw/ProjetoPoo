@@ -4,6 +4,8 @@ from Personagens import Player
 
 pygame.init()
 
+font = pygame.font.SysFont(None, 40)
+
 # ---------------- SCREEN ----------------
 SCREEN_W, SCREEN_H = 1920, 1080
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.FULLSCREEN)
@@ -21,8 +23,17 @@ while running:
     clock.tick(60)
 
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
             running = False
+        
+        if event.type == pygame.KEYDOWN:
+
+            if event.key == pygame.K_e:
+
+                if player.near_door(game_map):
+
+                    print("Entrou na casa!")
 
     keys = pygame.key.get_pressed()
 
@@ -46,6 +57,18 @@ while running:
     game_map.render(screen)
     scale_x = SCREEN_W / game_map.map_w
     scale_y = SCREEN_H / game_map.map_h
+    if player.near_door(game_map):
+
+        pygame.draw.rect(
+            screen,
+            (0,0,0),
+            (player.x + 10, player.y - 45, 40, 40)
+        )
+
+        text = font.render("E", True, (255,255,255))
+
+        screen.blit(text, (player.x + 20, player.y - 40))
+
 
     for wall in game_map.collisions:
 
