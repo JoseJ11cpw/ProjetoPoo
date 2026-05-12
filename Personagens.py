@@ -16,14 +16,14 @@ class Player:
         self.frame_height = self.SPRITE_HEIGHT // self.FRAME_ROWS
 
         # escala
-        self.scale = 0.4
+        self.scale = 0.25
         self.scaled_width = int(self.frame_width * self.scale)
         self.scaled_height = int(self.frame_height * self.scale)
 
-        # posição
-        self.x = 950
-        self.y = 900
-        self.speed = 5
+        # posição inicial
+        self.x = 100
+        self.y = 400
+        self.speed = 2
 
         # direção
         self.DOWN = 0
@@ -39,11 +39,11 @@ class Player:
         self.frame_speed = 10
 
         # HITBOX
-        self.hitbox_offset_x = 12
-        self.hitbox_offset_y = 30  #sobe/desce a hitbox
-        self.hitbox_width = self.scaled_width - 24
-        self.hitbox_height = 20 #altura da hitbox
-        
+        self.hitbox_offset_x = 6
+        self.hitbox_offset_y = 20  #sobe/desce a hitbox
+        self.hitbox_width = self.scaled_width - 12
+        self.hitbox_height = 16 #altura da hitbox
+
     def update(self, keys, game_map):
         dx = 0
         dy = 0
@@ -69,7 +69,10 @@ class Player:
             dy = self.speed
             self.direction = self.DOWN
             moving = True
-
+        # -------- NORMALIZAR DIAGONAL --------
+        if dx != 0 and dy != 0:
+            dx *= 0.7071
+            dy *= 0.7071
         # -------- COLISÃO X --------
         self.x += dx
         player_rect = self.get_rect()
@@ -117,10 +120,22 @@ class Player:
                     self.frame_index = 0
         else:
             self.frame_index = 0
-        
+
+        # ---------------- LIMITES DO MAPA ----------------
+        if self.x < 0:
+            self.x = 0
+
+        if self.y < 0:
+            self.y = 0
+
+        if self.x > game_map.map_w - self.scaled_width:
+            self.x = game_map.map_w - self.scaled_width
+
+        if self.y > game_map.map_h - self.scaled_height:
+            self.y = game_map.map_h - self.scaled_height
 
 
-    def draw(self, screen):
+    def draw(self, surface):
         frame = self.sprite.subsurface((
             self.frame_index * self.frame_width,
             self.direction * self.frame_height,
@@ -133,7 +148,7 @@ class Player:
             (self.scaled_width, self.scaled_height)
         )
 
-        screen.blit(frame, (self.x, self.y))
+        surface.blit(frame, (self.x, self.y))
 
 
     def get_rect(self):
@@ -143,6 +158,7 @@ class Player:
             self.hitbox_width,
             self.hitbox_height
         )
+
     def near_door(self, game_map):
 
         player_rect = self.get_rect()

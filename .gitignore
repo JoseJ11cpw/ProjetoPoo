@@ -1,3 +1,14 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+desenhar hitbox:
+        # ---------------- HITBOX (DESENHO) ----------------
+        pygame.draw.rect(
+            surface,
+            (255, 0, 0),
+            self.get_rect(),
+            2
+        )
+
+        

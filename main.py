@@ -1,18 +1,21 @@
 import pygame
 from mapa import Map
 from Personagens import Player
+from camera import Camera
 
 pygame.init()
 
-font = pygame.font.SysFont(None, 40)
-
-# ---------------- SCREEN ----------------
 SCREEN_W, SCREEN_H = 1920, 1080
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
+font = pygame.font.SysFont(None, 40)
+
 # ---------------- MAPA ----------------
-game_map=Map("mapa.tmx")
+game_map = Map("mapa.tmx")
+camera = Camera(SCREEN_W, SCREEN_H, game_map.map_w, game_map.map_h)
+
+world = pygame.Surface((game_map.map_w, game_map.map_h))
 
 # ---------------- PLAYER ----------------
 player = Player()
@@ -23,58 +26,46 @@ while running:
     clock.tick(60)
 
     for event in pygame.event.get():
-
         if event.type == pygame.QUIT:
             running = False
-        
-        if event.type == pygame.KEYDOWN:
-
-            if event.key == pygame.K_e:
-
-                if player.near_door(game_map):
-
-                    print("Entrou na casa!")
 
     keys = pygame.key.get_pressed()
-
-    # UPDATE PLAYER
     player.update(keys, game_map)
 
-    # ---------------- LIMITES DO MAPA ----------------
-    if player.x < 0:
-        player.x = 0
-    if player.y < 0:
-        player.y = 0
+    camera.update(player)
 
-    if player.x > 1920 - player.scaled_width:
-        player.x = 1920 - player.scaled_width
+    # ---------------- WORLD DRAW ----------------
+    world.fill((0, 0, 0))
 
-    if player.y > 1080 - player.scaled_height:
-        player.y = 1080 - player.scaled_height
+    game_map.render(world)
+    player.draw(world)
 
-    # ---------------- DESENHO ----------------
+    # ---------------- CAMERA VIEW ----------------
+    zoom = camera.zoom
 
-    game_map.render(screen)
-    scale_x = SCREEN_W / game_map.map_w
-    scale_y = SCREEN_H / game_map.map_h
-    if player.near_door(game_map):
+    view_w = int(SCREEN_W / zoom)
+    view_h = int(SCREEN_H / zoom)
 
-        pygame.draw.rect(
-            screen,
-            (0,0,0),
-            (player.x + 10, player.y - 45, 40, 40)
-        )
+    # clamp camera para não sair do world
+    cam_x = int(camera.offset_x)
+    cam_y = int(camera.offset_y)
 
-        text = font.render("E", True, (255,255,255))
+    if cam_x < 0:
+        cam_x = 0
+    if cam_y < 0:
+        cam_y = 0
+    if cam_x + view_w > game_map.map_w:
+        cam_x = game_map.map_w - view_w
+    if cam_y + view_h > game_map.map_h:
+        cam_y = game_map.map_h - view_h
 
-        screen.blit(text, (player.x + 20, player.y - 40))
+    camera_rect = pygame.Rect(cam_x, cam_y, view_w, view_h)
 
+    view = world.subsurface(camera_rect)
 
-    for wall in game_map.collisions:
+    scaled = pygame.transform.scale(view, (SCREEN_W, SCREEN_H))
 
-        scaled_rect = pygame.Rect(wall.x * scale_x,wall.y * scale_y,wall.width * scale_x,wall.height * scale_y)
-
-    player.draw(screen)
+    screen.blit(scaled, (0, 0))
 
     pygame.display.flip()
 
