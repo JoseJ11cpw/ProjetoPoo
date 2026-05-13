@@ -83,7 +83,7 @@
   <object id="6" name="wall" x="99.6285" y="191.759" width="9.32971" height="17.0502"/>
   <object id="8" name="wall" x="50.4832" y="191.577" width="9.40032" height="65.528"/>
   <object id="9" name="wall" x="50.0517" y="257.162" width="145.389" height="13.0574"/>
-  <object id="10" name="wall" x="195.642" y="257.073" width="8.74256" height="62.722"/>
+  <object id="10" name="wall" x="195.642" y="257.073" width="8.74256" height="62.2003"/>
   <object id="11" name="wall" x="274.421" y="129.013" width="11.2185" height="190.714"/>
   <object id="12" name="wall" type="wall" x="192.44" y="1.72592" width="95.3571" height="77.2349"/>
   <object id="13" name="wall" x="48.7572" y="112.616" width="64.2905" height="62.5646"/>

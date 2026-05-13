@@ -4,11 +4,4 @@ __pycache__/
 
 desenhar hitbox:
         # ---------------- HITBOX (DESENHO) ----------------
-        pygame.draw.rect(
-            surface,
-            (255, 0, 0),
-            self.get_rect(),
-            2
-        )
-
-        
+    pygame.draw.rect(world, (255, 0, 0), player.get_rect(), 2)
