@@ -1,112 +1,93 @@
 import pygame
-from mapa import Map
-from Personagens import Player
+import sys
+import random
+from efeitos import fade_out
+
 
 pygame.init()
 
-# ---------------- SCREEN ----------------
-SCREEN_W, SCREEN_H = 1920, 1080
-screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.FULLSCREEN)
+
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
+WIDTH, HEIGHT = screen.get_size()
+
 clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 60)
 
-# ---------------- GAME STATE ----------------
-state = "menu"
+options = ["START", "SAIR"]
+selected = 0
+background = pygame.image.load("imagens/FundoMenu.jpg").convert()
 
-menu_options = ["JOGAR", "SAIR"]
-menu_index = 0
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+leaves = []
 
-# ---------------- MAP / PLAYER ----------------
-game_map = None
-player = None
+for i in range(30):
 
-# ---------------- FONTS ----------------
-title_font = pygame.font.SysFont(None, 140)
-option_font = pygame.font.SysFont(None, 80)
-small_font = pygame.font.SysFont(None, 40)
+    x = random.randint(0, WIDTH)
+    y = random.randint(0, HEIGHT)
 
-# ---------------- MENU DRAW ----------------
-def draw_menu(screen):
-    screen.fill((15, 15, 30))
+    speed = random.uniform(1, 3)
 
-    # Título
-    title = title_font.render("HOT ROLL", True, (255, 200, 0))
-    screen.blit(title, (650, 200))
+    leaves.append([x, y, speed])
 
-    # Opções
-    base_x = 1150
-    base_y = 450
-    spacing = 120
+def menu():
 
-    for i, option in enumerate(menu_options):
+    global selected
 
-        color = (255, 255, 255)
-        offset = 0
+    running = True
 
-        if i == menu_index:
-            color = (255, 220, 0)
-            offset = 20
+    while running:
 
-        text = option_font.render(option, True, color)
-        screen.blit(text, (base_x + offset, base_y + i * spacing))
+        screen.blit(background, (0, 0))
 
-    # controles
-    a = small_font.render("ENTER - CONFIRMAR", True, (200, 200, 200))
-    b = small_font.render("ESC - SAIR", True, (200, 200, 200))
+        titulo = font.render("WHISPERWOOD", True, (255, 255, 255))
+        titulo_rect = titulo.get_rect(center=(WIDTH // 2, 120))
+        screen.blit(titulo, titulo_rect)
 
-    screen.blit(a, (50, 50))
-    screen.blit(b, (50, 100))
+        for i, option in enumerate(options):
 
+            color = (255, 255, 255)
 
-# ---------------- MAIN LOOP ----------------
-running = True
+            if i == selected:
+                color = (255, 255, 0)
 
-while running:
-    clock.tick(60)
+            texto = font.render(option, True, color)
+            texto_rect = texto.get_rect(center=(WIDTH // 2, 300 + i * 80))
+            screen.blit(texto, texto_rect)
 
-    # ---------------- EVENTS ----------------
-    for event in pygame.event.get():
+        for event in pygame.event.get():
 
-        if event.type == pygame.QUIT:
-            running = False
-
-        if state == "menu":
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
             if event.type == pygame.KEYDOWN:
 
-                if event.key == pygame.K_w:
-                    menu_index -= 1
+                if event.key == pygame.K_UP:
+                    selected = (selected - 1) % len(options)
 
-                if event.key == pygame.K_s:
-                    menu_index += 1
+                if event.key == pygame.K_DOWN:
+                    selected = (selected + 1) % len(options)
 
                 if event.key == pygame.K_RETURN:
 
-                    if menu_index == 0:
-                        game_map = Map("mapa.tmx")
-                        player = Player()
-                        state = "jogo"
+                    if options[selected] == "START":
 
-                    elif menu_index == 1:
-                        running = False
+                        fade_out(screen, clock)
 
-                if event.key == pygame.K_ESCAPE:
-                    running = False
+                        return
 
-    # limitar menu
-    menu_index = max(0, min(menu_index, len(menu_options) - 1))
+                    if options[selected] == "SAIR":
+                        pygame.quit()
+                        sys.exit()
+        for leaf in leaves:
 
-    # ---------------- RENDER ----------------
-    if state == "menu":
-        draw_menu(screen)
+            pygame.draw.rect(screen, (34,139,34), (leaf[0], leaf[1], 4, 4))
 
-    elif state == "jogo":
-        keys = pygame.key.get_pressed()
+            leaf[1] += leaf[2]
 
-        player.update(keys, game_map.collisions)
-
-        game_map.render(screen)
-        player.draw(screen)
-
-    pygame.display.flip()
-
-pygame.quit()
+            if leaf[1] > HEIGHT:
+                leaf[0] = random.randint(0, WIDTH)
+                leaf[1] = -10
+        pygame.display.flip()
+        clock.tick(60)
