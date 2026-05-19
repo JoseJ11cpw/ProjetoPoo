@@ -83,19 +83,27 @@ class Inventario:
 
 class Item:
         
-    def __init__(self, x, y, image, nome):
+    def __init__(self, x, y, image, nome, size=30):
         self.x = x
         self.y = y
 
         self.nome = nome
 
-        self.size = 30
+        self.size = size
 
         self.image = pygame.image.load(image).convert_alpha()
 
-        self.image = pygame.transform.scale(self.image,(self.size, self.size))
+        self.image = pygame.transform.scale(
+            self.image,
+            (self.size, self.size)
+        )
 
-        self.rect = pygame.Rect(self.x,self.y,self.size,self.size)
+        self.rect = pygame.Rect(
+            self.x,
+            self.y,
+            self.size,
+            self.size
+        )
 
         self.apanhado = False
 

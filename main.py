@@ -1,15 +1,21 @@
 import pygame
 
 from mapa import Map
-from Personagens import Player
+from Personagens import Player, NPC, Inimigo
 from camera import Camera
 from menu import menu
-from npc import NPC
 from inventario import Inventario, Item
+from barco import Barco
+
 
 
 pygame.init()
 
+# ---------------- Músicas/Efeitos Sonoros ----------------
+pygame.mixer.music.load("musicas/musicaLoop.wav")
+som_porta = pygame.mixer.Sound("musicas/Porta.mp3")
+
+pygame.mixer.music.play(-1)
 # ---------------- SCREEN ----------------
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
@@ -26,6 +32,7 @@ font = pygame.font.SysFont(None, 40)
 # ---------------- MAPAS ----------------
 outside_map = Map("mapa.tmx")
 house_map = Map("casa.tmx")
+ilha= Map("ilha.tmx")
 
 current_map = "outside"
 
@@ -38,31 +45,31 @@ camera = Camera(
     game_map.map_w,
     game_map.map_h
 )
-
 world = pygame.Surface((game_map.map_w, game_map.map_h))
-
-# ---------------- Músicas/Efeitos Sonoros ----------------
-#pygame.mixer.music.load("sua_musica.mp3")
-som_porta = pygame.mixer.Sound("musicas/Porta.mp3")
 
 # ---------------- PLAYER ----------------
 player = Player()
 
 # ---------------- NPC ----------------
-npc = NPC(100,400,"imagens/Npc2.png")
+npc = NPC(800,200,"imagens/Preto.png", scale=1)
+enemy = Inimigo(800,600,"imagens/Polvo.png")
+barco = Barco(
+    600,
+    400,
+    "imagens/barco.png"
+)
 
 inventario = Inventario()
-cristal = Item(100,500,"imagens/cristal.png","Cristal")
+moeda = Item(100, 300, "imagens/moeda.png", "Moeda", 40)
+
 # ---------------- FADE ----------------
 fade_alpha = 255
 start_fade = True
 
 # ---------------- LOOP ----------------
 running = True
-
 while running:
     clock.tick(60)
-    #pygame.mixer.music.play(-1)
     # ---------------- EVENTS ----------------
     for event in pygame.event.get():
 
@@ -71,13 +78,33 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             # FECHAR JOGO
-            if event.key == pygame.K_ESCAPE:
-                running = False
             if event.key == pygame.K_TAB:
 
                 inventario.toggle()
             # INTERAÇÃO NPC
             if event.key == pygame.K_e:
+                # ---------------- BARCO ----------------
+                if barco.near_player(player):
+
+                    game_map = ilha
+
+                    current_map = "ilha"
+
+                    player.x = 600
+                    player.y = 400
+
+                    # RESET WORLD
+                    world = pygame.Surface(
+                        (game_map.map_w, game_map.map_h)
+                    )
+
+                    # RESET CAMERA
+                    camera = Camera(
+                        SCREEN_W,
+                        SCREEN_H,
+                        game_map.map_w,
+                        game_map.map_h
+                    )
 
                 if npc.near_player(player):
 
@@ -115,13 +142,13 @@ while running:
                         game_map.map_h
                     )
                                 # APANHAR ITEM
-                if cristal.near_player(player):
+                if moeda.near_player(player):
 
-                    if not cristal.apanhado:
+                    if not moeda.apanhado:
 
-                        inventario.add_item(cristal.nome)
+                        inventario.add_item(moeda.nome)
 
-                        cristal.apanhado = True
+                        moeda.apanhado = True
             # AVANÇAR DIÁLOGO
             if npc.dialogo_ativo:
 
@@ -156,13 +183,17 @@ while running:
 
     # ---------------- UPDATE ----------------
     keys = pygame.key.get_pressed()
+
+    enemy.update(player)
+    enemy.attack_player(player)
+
     npc.update()
     # BLOQUEIA MOVIMENTO DURANTE DIÁLOGO
     if not npc.dialogo_ativo and not inventario.aberto:
         player.update(keys, game_map)
 
     # UPDATE CAMERA
-    if current_map == "outside":
+    if current_map != "house":
         camera.update(player)
 
     # ---------------- DRAW WORLD ----------------
@@ -172,27 +203,37 @@ while running:
     
     if current_map == "outside":
         npc.draw(world)
+        barco.draw(world)
 
-    cristal.draw(world)
+    moeda.draw(world)
+    if current_map=="ilha":
+
+        enemy.draw(world)
+
     player.draw(world)
 
     # ---------------- CAMERA VIEW ----------------
     view_w = int(SCREEN_W / camera.zoom)
     view_h = int(SCREEN_H / camera.zoom)
 
-    if current_map == "outside":
-
+    if current_map == "house":
+        cam_x = (game_map.map_w - view_w) // 2
+        cam_y = (game_map.map_h - view_h) // 2
+    else:
         cam_x = int(camera.offset_x)
         cam_y = int(camera.offset_y)
 
-    else:
+    # ---------------- FIX CRÍTICO ----------------
+    # garantir que a "janela da câmera" não é maior que o mapa
+    view_w = min(view_w, game_map.map_w)
+    view_h = min(view_h, game_map.map_h)
 
-        cam_x = (game_map.map_w - view_w) // 2
-        cam_y = (game_map.map_h - view_h) // 2
+    # clamp seguro
+    max_x = max(0, game_map.map_w - view_w)
+    max_y = max(0, game_map.map_h - view_h)
 
-    # CLAMP
-    cam_x = max(0, min(cam_x, game_map.map_w - view_w))
-    cam_y = max(0, min(cam_y, game_map.map_h - view_h))
+    cam_x = max(0, min(cam_x, max_x))
+    cam_y = max(0, min(cam_y, max_y))
 
     camera_rect = pygame.Rect(
         cam_x,
@@ -201,15 +242,18 @@ while running:
         view_h
     )
 
-    view = world.subsurface(camera_rect)
+    # segurança extra (evita crash 100%)
+    camera_rect.width = min(camera_rect.width, world.get_width())
+    camera_rect.height = min(camera_rect.height, world.get_height())
 
+    # ---------------- SUBSURFACE SAFE ----------------
+    view = world.subsurface(camera_rect)
     scaled = pygame.transform.scale(
-        view,
-        (SCREEN_W, SCREEN_H)
-    )
+    view,
+    (SCREEN_W, SCREEN_H)
+)
 
     screen.blit(scaled, (0, 0))
-
     # ---------------- UI PORTA ----------------
     if player.near_door(game_map):
 
@@ -287,9 +331,9 @@ while running:
             (key_rect.right + 20, ui_rect.y + 12)
         )
     # ---------------- UI ITEM ----------------
-    if cristal.near_player(player):
+    if moeda.near_player(player):
 
-        if not cristal.apanhado:
+        if not moeda.apanhado:
 
             action = "Apanhar"
 
@@ -414,6 +458,61 @@ while running:
         npc.update_dialogo()
 
         npc.draw_dialogo(screen,font,SCREEN_W,SCREEN_H)
+    # ---------------- UI BARCO ----------------
+    if barco.near_player(player):
+
+        action = "Viajar"
+
+        ui_rect = pygame.Rect(
+            SCREEN_W // 2 - 140,
+            SCREEN_H - 120,
+            220,
+            60
+        )
+
+        ui_surface = pygame.Surface(
+            (220, 60),
+            pygame.SRCALPHA
+        )
+
+        pygame.draw.rect(
+            ui_surface,
+            (0,0,0,180),
+            (0,0,220,60),
+            border_radius=12
+        )
+
+        screen.blit(ui_surface, ui_rect.topleft)
+
+        pygame.draw.rect(
+            screen,
+            (255,255,255),
+            ui_rect,
+            2,
+            border_radius=12
+        )
+
+        key_text = font.render(
+            "E",
+            True,
+            (255,255,255)
+        )
+
+        text = font.render(
+            action,
+            True,
+            (255,255,255)
+        )
+
+        screen.blit(
+            key_text,
+            (ui_rect.x + 20, ui_rect.y + 12)
+        )
+
+        screen.blit(
+            text,
+            (ui_rect.x + 60, ui_rect.y + 12)
+        )
     # ---------------- FADE IN ----------------
     if start_fade:
 
@@ -434,5 +533,5 @@ while running:
 
     # ---------------- UPDATE SCREEN ----------------
     pygame.display.flip()
-
+    
 pygame.quit()

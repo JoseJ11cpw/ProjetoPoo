@@ -1,5 +1,5 @@
 import pygame
-
+import math
 
 class Player:
     def __init__(self):
@@ -23,8 +23,9 @@ class Player:
         # posição inicial
         self.x = 100
         self.y = 400
-        self.speed = 2
 
+        self.speed = 2
+        self.vida=100
         # direção
         self.DOWN = 0
         self.LEFT = 2
@@ -169,3 +170,252 @@ class Player:
                 return True
 
         return False
+
+
+class NPC:
+
+    def __init__(self, x, y, image, scale=1):
+
+        self.x = x
+        self.y = y
+
+        # ---------------- IMAGEM ORIGINAL ----------------
+        self.image_original = pygame.image.load(image).convert_alpha()
+
+        # ---------------- ESCALA SEM DISTORCER ----------------
+        largura_original = self.image_original.get_width()
+        altura_original = self.image_original.get_height()
+
+        self.largura = int(largura_original * scale)
+        self.altura = int(altura_original * scale)
+
+        self.image = pygame.transform.scale(
+            self.image_original,
+            (self.largura, self.altura)
+        )
+
+        # ---------------- HITBOX ----------------
+        self.rect = pygame.Rect(
+            self.x,
+            self.y,
+            self.largura,
+            self.altura
+        )
+
+        # ---------------- ÁREA DE INTERAÇÃO ----------------
+        self.interaction_rect = self.rect.inflate(80, 80)
+
+        # ---------------- DIÁLOGO ----------------
+        self.dialogo = [
+            "Olá aventureiro...",
+            "A floresta foi corrompida.",
+            "Encontra os 3 cristais."
+        ]
+
+        self.dialogo_ativo = False
+        self.dialogo_index = 0
+
+        self.texto_visivel = ""
+        self.char_index = 0
+
+        self.last_update = pygame.time.get_ticks()
+        self.text_speed = 30
+
+    # ---------------- UPDATE ----------------
+    def update(self):
+
+        self.rect.topleft = (self.x, self.y)
+        self.interaction_rect = self.rect.inflate(80, 80)
+
+    # ---------------- DESENHAR NPC ----------------
+    def draw(self, screen):
+
+        screen.blit(self.image, (self.x, self.y))
+
+    # ---------------- VERIFICAR DISTÂNCIA PLAYER ----------------
+    def near_player(self, player):
+
+        player_rect = pygame.Rect(
+            player.x,
+            player.y,
+            64,
+            64
+        )
+
+        return self.interaction_rect.colliderect(player_rect)
+
+    # ---------------- DESENHAR DIÁLOGO ----------------
+    def draw_dialogo(self, screen, font, SCREEN_W, SCREEN_H):
+
+        rect = pygame.Rect(
+            120,
+            SCREEN_H - 240,
+            SCREEN_W - 240,
+            160
+        )
+
+        # sombra
+        shadow_rect = rect.copy()
+        shadow_rect.x += 6
+        shadow_rect.y += 6
+
+        pygame.draw.rect(
+            screen,
+            (50, 30, 10),
+            shadow_rect,
+            border_radius=12
+        )
+
+        # fundo
+        pygame.draw.rect(
+            screen,
+            (240, 220, 170),
+            rect,
+            border_radius=12
+        )
+
+        # borda
+        pygame.draw.rect(
+            screen,
+            (120, 80, 40),
+            rect,
+            5,
+            border_radius=12
+        )
+
+        # texto
+        rendered = font.render(
+            self.texto_visivel,
+            True,
+            (20, 20, 20)
+        )
+
+        screen.blit(
+            rendered,
+            (rect.x + 30, rect.y + 40)
+        )
+
+        # continuar
+        continue_text = font.render(
+            "SPACE",
+            True,
+            (80, 50, 20)
+        )
+
+        screen.blit(
+            continue_text,
+            (rect.right - 140, rect.bottom - 45)
+        )
+
+    # ---------------- UPDATE TEXTO DIÁLOGO ----------------
+    def update_dialogo(self):
+
+        full_text = self.dialogo[self.dialogo_index]
+        now = pygame.time.get_ticks()
+
+        if now - self.last_update > self.text_speed:
+
+            self.last_update = now
+
+            if self.char_index < len(full_text):
+
+                self.char_index += 1
+                self.texto_visivel = full_text[:self.char_index]
+
+
+class Inimigo:
+
+    def __init__(self, x, y, image):
+
+        self.x = x
+        self.y = y
+
+        self.speed = 1
+
+        self.size = 64
+
+        self.image = pygame.image.load(image).convert_alpha()
+
+        self.image = pygame.transform.scale(
+            self.image,
+            (self.size, self.size)
+        )
+
+        self.rect = pygame.Rect(
+            self.x,
+            self.y,
+            self.size,
+            self.size
+        )
+
+        self.vida = 100
+
+        self.damage = 1
+        self.attack_cooldown = 0
+    # ---------------- UPDATE ----------------
+    def update(self, player):
+
+        dx = player.x - self.x
+        dy = player.y - self.y
+
+        distance = math.sqrt(dx**2 + dy**2)
+
+        # EVITAR BUG DIVISÃO
+        if distance > 0:
+
+            dx /= distance
+            dy /= distance
+
+            self.x += dx * self.speed
+            self.y += dy * self.speed
+
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    # ---------------- DRAW ----------------
+    def draw(self, screen):
+
+        screen.blit(
+            self.image,
+            (self.x, self.y)
+        )
+
+        # VIDA
+        pygame.draw.rect(
+            screen,
+            (255,0,0),
+            (self.x, self.y - 10, 50, 6)
+        )
+
+        pygame.draw.rect(
+            screen,
+            (0,255,0),
+            (
+                self.x,
+                self.y - 10,
+                self.vida / 2,
+                6
+            )
+        )
+
+    # ---------------- DANO ----------------
+    def attack_player(self, player):
+
+        player_rect = pygame.Rect(
+            player.x,
+            player.y,
+            64,
+            64
+        )
+
+        if self.attack_cooldown > 0:
+
+            self.attack_cooldown -= 1
+
+        if self.rect.colliderect(player_rect):
+
+            if self.attack_cooldown == 0:
+
+                player.vida -= self.damage
+
+                self.attack_cooldown = 60
