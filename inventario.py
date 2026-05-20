@@ -7,17 +7,22 @@ class Inventario:
 
         self.aberto = False
 
-        self.itens = {} 
+        self.itens = []
 
     # ---------------- TOGGLE ----------------
     def toggle(self):
 
         self.aberto = not self.aberto
 
+    # ---------------- ADD ITEM ----------------
+    def add_item(self, item):
+
+        self.itens.append(item)
+
     # ---------------- DRAW ----------------
     def draw(self, screen, font, SCREEN_W, SCREEN_H):
 
-        # FUNDO
+        # ---------------- FUNDO ----------------
         rect = pygame.Rect(
             SCREEN_W // 2 - 300,
             SCREEN_H // 2 - 200,
@@ -40,7 +45,7 @@ class Inventario:
             border_radius=12
         )
 
-        # TÍTULO
+        # ---------------- TÍTULO ----------------
         title = font.render(
             "INVENTÁRIO",
             True,
@@ -52,38 +57,49 @@ class Inventario:
             (rect.x + 20, rect.y + 20)
         )
 
-        # ITENS
-        y = rect.y + 80
+        # ---------------- ITENS ----------------
+        y = rect.y + 90
 
-        for item, quantidade in self.itens.items():
+        for item in self.itens:
 
+            # IMG MAIOR SÓ NO INVENTÁRIO
+            inventory_img = pygame.transform.scale(
+                item.image,
+                (80, 80)
+            )
+
+            # DESENHAR IMG
+            screen.blit(
+                inventory_img,
+                (rect.x + 40, y-15)
+            )
+
+            # NOME
             text = font.render(
-                f"{item}  x{quantidade}",
+                item.nome,
                 True,
                 (20,20,20)
             )
 
-            screen.blit(text, (rect.x + 40, y))
+            screen.blit(
+                text,
+                (rect.x + 130, y + 15)
+            )
 
-            y += 50
-
-    def add_item(self, nome):
-
-        if nome in self.itens:
-
-             self.itens[nome] += 1
-
-        else:
-
-            self.itens[nome] = 1
-
-
-
+            y += 80
 
 
 class Item:
-        
-    def __init__(self, x, y, image, nome, size=30):
+
+    def __init__(
+        self,
+        x,
+        y,
+        image,
+        nome,
+        size=40
+    ):
+
         self.x = x
         self.y = y
 
@@ -91,13 +107,18 @@ class Item:
 
         self.size = size
 
-        self.image = pygame.image.load(image).convert_alpha()
+        # ---------------- IMAGEM ORIGINAL ----------------
+        original_image = pygame.image.load(
+            image
+        ).convert_alpha()
 
+        # IMG DO CHÃO
         self.image = pygame.transform.scale(
-            self.image,
+            original_image,
             (self.size, self.size)
         )
 
+        # RECT
         self.rect = pygame.Rect(
             self.x,
             self.y,
@@ -107,16 +128,26 @@ class Item:
 
         self.apanhado = False
 
-        # ---------------- DRAW ----------------
+    # ---------------- DRAW ----------------
     def draw(self, screen):
 
         if not self.apanhado:
 
-            screen.blit(self.image,(self.x, self.y))
+            screen.blit(
+                self.image,
+                (self.x, self.y)
+            )
 
-        # ---------------- DISTÂNCIA ----------------
+    # ---------------- DISTÂNCIA ----------------
     def near_player(self, player):
 
-        player_rect = pygame.Rect(player.x, player.y, 64, 64 )
+        player_rect = pygame.Rect(
+            player.x,
+            player.y,
+            64,
+            64
+        )
 
-        return self.rect.colliderect(player_rect.inflate(40, 40))
+        return self.rect.colliderect(
+            player_rect.inflate(40, 40)
+        )

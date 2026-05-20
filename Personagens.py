@@ -26,6 +26,7 @@ class Player:
 
         self.speed = 2
         self.vida=100
+        self.vida_max=100
         # direção
         self.DOWN = 0
         self.LEFT = 2
@@ -151,7 +152,42 @@ class Player:
 
         surface.blit(frame, (self.x, self.y))
 
+    def draw_health(self, screen):
 
+        bar_width = 250
+        bar_height = 25
+
+        x = 20
+        y = 20
+
+        # FUNDO
+        pygame.draw.rect(
+            screen,
+            (80,0,0),
+            (x, y, bar_width, bar_height),
+            border_radius=8
+        )
+
+        # VIDA
+        current_width = (
+            self.vida / self.vida_max
+        ) * bar_width
+
+        pygame.draw.rect(
+            screen,
+            (0,255,0),
+            (x, y, current_width, bar_height),
+            border_radius=8
+        )
+
+        # BORDA
+        pygame.draw.rect(
+            screen,
+            (255,255,255),
+            (x, y, bar_width, bar_height),
+            2,
+            border_radius=8
+        )
     def get_rect(self):
         return pygame.Rect(
             self.x + self.hitbox_offset_x,
@@ -350,7 +386,7 @@ class Inimigo:
 
         self.vida = 100
 
-        self.damage = 1
+        self.damage = 10
         self.attack_cooldown = 0
     # ---------------- UPDATE ----------------
     def update(self, player):

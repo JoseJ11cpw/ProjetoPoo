@@ -1,12 +1,10 @@
 import pygame
 
-from mapa import Map
+from mapa import Map, Barco
 from Personagens import Player, NPC, Inimigo
 from camera import Camera
 from menu import menu
 from inventario import Inventario, Item
-from barco import Barco
-
 
 
 pygame.init()
@@ -52,6 +50,8 @@ player = Player()
 
 # ---------------- NPC ----------------
 npc = NPC(800,200,"imagens/Preto.png", scale=1)
+npc2 = NPC(600,200, "imagens/Npc2.png",scale=1)
+
 enemy = Inimigo(800,600,"imagens/Polvo.png")
 barco = Barco(
     600,
@@ -60,6 +60,9 @@ barco = Barco(
 )
 
 inventario = Inventario()
+mochila = pygame.image.load("imagens/mochila.png").convert_alpha()
+mochila = pygame.transform.scale(mochila,(48,48))
+
 moeda = Item(100, 300, "imagens/moeda.png", "Moeda", 40)
 
 # ---------------- FADE ----------------
@@ -146,7 +149,7 @@ while running:
 
                     if not moeda.apanhado:
 
-                        inventario.add_item(moeda.nome)
+                        inventario.add_item(moeda)
 
                         moeda.apanhado = True
             # AVANÇAR DIÁLOGO
@@ -183,9 +186,9 @@ while running:
 
     # ---------------- UPDATE ----------------
     keys = pygame.key.get_pressed()
-
-    enemy.update(player)
-    enemy.attack_player(player)
+    if current_map =="ilha":
+        enemy.update(player)
+        enemy.attack_player(player)
 
     npc.update()
     # BLOQUEIA MOVIMENTO DURANTE DIÁLOGO
@@ -203,6 +206,8 @@ while running:
     
     if current_map == "outside":
         npc.draw(world)
+        npc2.draw(world)
+
         barco.draw(world)
 
     moeda.draw(world)
@@ -254,6 +259,42 @@ while running:
 )
 
     screen.blit(scaled, (0, 0))
+    player.draw_health(screen)
+    # ---------------- UI INVENTÁRIO ----------------
+
+    bag_rect = pygame.Rect(
+        SCREEN_W - 90,
+        20,
+        60,
+        60
+    )
+
+    # FUNDO
+    pygame.draw.rect(
+        screen,
+        (30,30,30),
+        bag_rect,
+        border_radius=12
+    )
+
+    # BORDA
+    pygame.draw.rect(
+        screen,
+        (255,255,255),
+        bag_rect,
+        2,
+        border_radius=12
+    )
+
+    # IMG
+    screen.blit(
+        mochila,
+        (bag_rect.x + 6, bag_rect.y + 6)
+    )
+    tab_text = font.render("TAB",True,(255,255,255))
+
+    screen.blit(tab_text,(bag_rect.x - 70,bag_rect.y + 20))
+
     # ---------------- UI PORTA ----------------
     if player.near_door(game_map):
 
