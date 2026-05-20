@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="60" height="34" tilewidth="16" tileheight="16" infinite="0" nextlayerid="8" nextobjectid="80">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="60" height="34" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="81">
  <tileset firstgid="1" source="imagens/tiles.tsx"/>
  <tileset firstgid="351" source="imagens/tileset_water.tsx"/>
  <tileset firstgid="1266" source="imagens/tileset_basic_terrain.tsx"/>

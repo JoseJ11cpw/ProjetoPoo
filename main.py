@@ -62,8 +62,11 @@ barco = Barco(
 inventario = Inventario()
 mochila = pygame.image.load("imagens/mochila.png").convert_alpha()
 mochila = pygame.transform.scale(mochila,(48,48))
+itens = [
+    Item(100, 300, "imagens/moeda.png", "Moeda", 40),
+    Item(100,200, "imagens/moeda.png", "Espada", 40)
+]
 
-moeda = Item(100, 300, "imagens/moeda.png", "Moeda", 40)
 
 # ---------------- FADE ----------------
 fade_alpha = 255
@@ -87,27 +90,22 @@ while running:
             # INTERAÇÃO NPC
             if event.key == pygame.K_e:
                 # ---------------- BARCO ----------------
-                if barco.near_player(player):
+                if current_map == "outside":
 
-                    game_map = ilha
+                    if barco.near_player(player):
 
-                    current_map = "ilha"
+                        game_map = ilha
 
-                    player.x = 600
-                    player.y = 400
+                        current_map = "ilha"
 
-                    # RESET WORLD
-                    world = pygame.Surface(
-                        (game_map.map_w, game_map.map_h)
-                    )
+                        player.x = 600
+                        player.y = 400
 
-                    # RESET CAMERA
-                    camera = Camera(
-                        SCREEN_W,
-                        SCREEN_H,
-                        game_map.map_w,
-                        game_map.map_h
-                    )
+                        # RESET WORLD
+                        world = pygame.Surface((game_map.map_w, game_map.map_h))
+
+                        # RESET CAMERA
+                        camera = Camera(SCREEN_W,SCREEN_H,game_map.map_w,game_map.map_h)
 
                 if npc.near_player(player):
 
@@ -145,13 +143,16 @@ while running:
                         game_map.map_h
                     )
                                 # APANHAR ITEM
-                if moeda.near_player(player):
+                for item in itens:
 
-                    if not moeda.apanhado:
+                    if item.near_player(player):
 
-                        inventario.add_item(moeda)
+                        if not item.apanhado:
 
-                        moeda.apanhado = True
+                            inventario.add_item(item)
+
+                            item.apanhado = True
+
             # AVANÇAR DIÁLOGO
             if npc.dialogo_ativo:
 
@@ -203,19 +204,19 @@ while running:
     world.fill((0, 0, 0))
 
     game_map.render(world)
-    
+    player.draw(world)
     if current_map == "outside":
         npc.draw(world)
         npc2.draw(world)
-
         barco.draw(world)
 
-    moeda.draw(world)
+    for item in itens:
+
+        item.draw(world)
+
     if current_map=="ilha":
 
         enemy.draw(world)
-
-    player.draw(world)
 
     # ---------------- CAMERA VIEW ----------------
     view_w = int(SCREEN_W / camera.zoom)
@@ -372,9 +373,8 @@ while running:
             (key_rect.right + 20, ui_rect.y + 12)
         )
     # ---------------- UI ITEM ----------------
-    if moeda.near_player(player):
-
-        if not moeda.apanhado:
+    for item in itens:
+        if item.near_player(player) and not item.apanhado:
 
             action = "Apanhar"
 
@@ -385,15 +385,13 @@ while running:
                 60
             )
 
-            ui_surface = pygame.Surface(
-                (220, 60),
-                pygame.SRCALPHA
-            )
+            # FUNDO
+            ui_surface = pygame.Surface((220, 60), pygame.SRCALPHA)
 
             pygame.draw.rect(
                 ui_surface,
-                (0,0,0,180),
-                (0,0,220,60),
+                (0, 0, 0, 180),
+                (0, 0, 220, 60),
                 border_radius=12
             )
 
@@ -401,32 +399,44 @@ while running:
 
             pygame.draw.rect(
                 screen,
-                (255,255,255),
+                (255, 255, 255),
                 ui_rect,
                 2,
                 border_radius=12
             )
 
-            key_text = font.render(
-                "E",
-                True,
-                (255,255,255)
+            # KEY BOX
+            key_rect = pygame.Rect(
+                ui_rect.x + 10,
+                ui_rect.y + 10,
+                40,
+                40
             )
 
-            text = font.render(
-                action,
-                True,
-                (255,255,255)
+            pygame.draw.rect(
+                screen,
+                (255, 255, 255),
+                key_rect,
+                border_radius=8
             )
+
+            # LETRA E
+            e_text = font.render("E", True, (0, 0, 0))
 
             screen.blit(
-                key_text,
-                (ui_rect.x + 20, ui_rect.y + 12)
+                e_text,
+                (
+                    key_rect.centerx - e_text.get_width() // 2,
+                    key_rect.centery - e_text.get_height() // 2
+                )
             )
+
+            # TEXTO
+            text = font.render(action, True, (255, 255, 255))
 
             screen.blit(
                 text,
-                (ui_rect.x + 60, ui_rect.y + 12)
+                (key_rect.right + 20, ui_rect.y + 12)
             )
     # ---------------- UI NPC ----------------
     if current_map == "outside":
@@ -503,57 +513,58 @@ while running:
     if barco.near_player(player):
 
         action = "Viajar"
+        if current_map=="outside":
 
-        ui_rect = pygame.Rect(
-            SCREEN_W // 2 - 140,
-            SCREEN_H - 120,
-            220,
-            60
-        )
+            ui_rect = pygame.Rect(
+                SCREEN_W // 2 - 140,
+                SCREEN_H - 120,
+                220,
+                60
+            )
 
-        ui_surface = pygame.Surface(
-            (220, 60),
-            pygame.SRCALPHA
-        )
+            ui_surface = pygame.Surface(
+                (220, 60),
+                pygame.SRCALPHA
+            )
 
-        pygame.draw.rect(
-            ui_surface,
-            (0,0,0,180),
-            (0,0,220,60),
-            border_radius=12
-        )
+            pygame.draw.rect(
+                ui_surface,
+                (0,0,0,180),
+                (0,0,220,60),
+                border_radius=12
+            )
 
-        screen.blit(ui_surface, ui_rect.topleft)
+            screen.blit(ui_surface, ui_rect.topleft)
 
-        pygame.draw.rect(
-            screen,
-            (255,255,255),
-            ui_rect,
-            2,
-            border_radius=12
-        )
+            pygame.draw.rect(
+                screen,
+                (255,255,255),
+                ui_rect,
+                2,
+                border_radius=12
+            )
 
-        key_text = font.render(
-            "E",
-            True,
-            (255,255,255)
-        )
+            key_text = font.render(
+                "E",
+                True,
+                (255,255,255)
+            )
 
-        text = font.render(
-            action,
-            True,
-            (255,255,255)
-        )
+            text = font.render(
+                action,
+                True,
+                (255,255,255)
+            )
 
-        screen.blit(
-            key_text,
-            (ui_rect.x + 20, ui_rect.y + 12)
-        )
+            screen.blit(
+                key_text,
+                (ui_rect.x + 20, ui_rect.y + 12)
+            )
 
-        screen.blit(
-            text,
-            (ui_rect.x + 60, ui_rect.y + 12)
-        )
+            screen.blit(
+                text,
+                (ui_rect.x + 60, ui_rect.y + 12)
+            )
     # ---------------- FADE IN ----------------
     if start_fade:
 

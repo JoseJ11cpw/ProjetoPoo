@@ -65,13 +65,13 @@ class Inventario:
             # IMG MAIOR SÓ NO INVENTÁRIO
             inventory_img = pygame.transform.scale(
                 item.image,
-                (80, 80)
+                (110, 110) #mexer no tamanho das img no inventario
             )
 
             # DESENHAR IMG
             screen.blit(
                 inventory_img,
-                (rect.x + 40, y-15)
+                (rect.x + 20, y-25)
             )
 
             # NOME
