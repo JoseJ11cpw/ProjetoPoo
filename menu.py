@@ -3,33 +3,66 @@ import sys
 import random
 from efeitos import fade_out
 
-
 pygame.init()
 
+# ---------------- FULLSCREEN ----------------
+screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-
-WIDTH, HEIGHT = screen.get_size()
+SCREEN_W, SCREEN_H = screen.get_size()
 
 clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 60)
 
-options = ["START", "SAIR"]
+# ---------------- FONTES ----------------
+title_font = pygame.font.Font(
+    "fontes/PressStart2P-Regular.ttf",
+    90
+)
+
+button_font = pygame.font.Font(
+    "fontes/PressStart2P-Regular.ttf",
+    40
+)
+
+small_font = pygame.font.Font(
+    "fontes/PressStart2P-Regular.ttf",
+    20
+)
+
+# ---------------- CORES ----------------
+WHITE = (255,255,255)
+YELLOW = (255,220,0)
+BLACK = (0,0,0)
+
+# ---------------- FUNDO ----------------
+background = pygame.image.load(
+    "imagens/fundoMenu2.jpg"
+).convert()
+
+background = pygame.transform.scale(
+    background,
+    (SCREEN_W, SCREEN_H)
+)
+
+# ---------------- PARTÍCULAS ----------------
+particles = []
+
+for i in range(50):
+
+    particles.append([
+        random.randint(0, SCREEN_W),
+        random.randint(0, SCREEN_H),
+        random.randint(2,5)
+    ])
+
+# ---------------- BOTÕES ----------------
+buttons = [
+    "JOGAR",
+    "SAIR"
+]
+
 selected = 0
-background = pygame.image.load("imagens/FundoMenu.jpg").convert()
 
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-leaves = []
-
-for i in range(30):
-
-    x = random.randint(0, WIDTH)
-    y = random.randint(0, HEIGHT)
-
-    speed = random.uniform(1, 3)
-
-    leaves.append([x, y, speed])
-
+# ---------------- MENU ----------------
 def menu():
 
     global selected
@@ -38,23 +71,9 @@ def menu():
 
     while running:
 
-        screen.blit(background, (0, 0))
+        clock.tick(60)
 
-        titulo = font.render("WHISPERWOOD", True, (255, 255, 255))
-        titulo_rect = titulo.get_rect(center=(WIDTH // 2, 120))
-        screen.blit(titulo, titulo_rect)
-
-        for i, option in enumerate(options):
-
-            color = (255, 255, 255)
-
-            if i == selected:
-                color = (255, 255, 0)
-
-            texto = font.render(option, True, color)
-            texto_rect = texto.get_rect(center=(WIDTH // 2, 300 + i * 80))
-            screen.blit(texto, texto_rect)
-
+        # ---------------- EVENTS ----------------
         for event in pygame.event.get():
 
             if event.type == pygame.QUIT:
@@ -63,33 +82,131 @@ def menu():
 
             if event.type == pygame.KEYDOWN:
 
-                if event.key == pygame.K_UP:
-                    selected = (selected - 1) % len(options)
-
                 if event.key == pygame.K_DOWN:
-                    selected = (selected + 1) % len(options)
+
+                    selected += 1
+
+                    if selected >= len(buttons):
+                        selected = 0
+
+                if event.key == pygame.K_UP:
+
+                    selected -= 1
+
+                    if selected < 0:
+                        selected = len(buttons) - 1
 
                 if event.key == pygame.K_RETURN:
 
-                    if options[selected] == "START":
+                    if buttons[selected] == "JOGAR":
 
                         fade_out(screen, clock)
 
-                        return
+                        running = False
 
-                    if options[selected] == "SAIR":
+                    if buttons[selected] == "SAIR":
                         pygame.quit()
                         sys.exit()
-        for leaf in leaves:
 
-            pygame.draw.rect(screen, (34,139,34), (leaf[0], leaf[1], 4, 4))
+        # ---------------- DRAW ----------------
+        screen.blit(background, (0,0))
 
-            leaf[1] += leaf[2]
+        # ---------------- OVERLAY ESCURO ----------------
+        overlay = pygame.Surface(
+            (SCREEN_W, SCREEN_H),
+            pygame.SRCALPHA
+        )
 
-            if leaf[1] > HEIGHT:
-                leaf[0] = random.randint(0, WIDTH)
-                leaf[1] = -10
+        overlay.fill((0,0,0,120))
+
+        screen.blit(overlay, (0,0))
+
+        # ---------------- PARTÍCULAS ----------------
+        for particle in particles:
+
+            pygame.draw.circle(
+                screen,
+                (255,255,255),
+                (particle[0], particle[1]),
+                particle[2]
+            )
+
+            particle[1] -= 1
+
+            if particle[1] < 0:
+
+                particle[0] = random.randint(0, SCREEN_W)
+                particle[1] = SCREEN_H
+
+        # ---------------- TÍTULO ----------------
+        title = title_font.render(
+            "ECHOES OF THE ISLAND",
+            True,
+            WHITE
+        )
+
+        shadow = title_font.render(
+            "ECHOES OF THE ISLAND",
+            True,
+            BLACK
+        )
+
+        screen.blit(
+            shadow,
+            (
+                SCREEN_W//2 - title.get_width()//2 + 4,
+                140 + 4
+            )
+        )
+
+        screen.blit(
+            title,
+            (
+                SCREEN_W//2 - title.get_width()//2,
+                140
+            )
+        )
+
+        # ---------------- BOTÕES ----------------
+        for i, button in enumerate(buttons):
+
+            color = WHITE
+
+            prefix = "  "
+
+            if i == selected:
+
+                color = YELLOW
+
+                prefix = "> "
+
+            text = button_font.render(
+                prefix + button,
+                True,
+                color
+            )
+
+            screen.blit(
+                text,
+                (
+                    SCREEN_W//2 - text.get_width()//2,
+                    420 + i * 90
+                )
+            )
+
+        # ---------------- TEXTO PEQUENO ----------------
+        info = small_font.render(
+            "ENTER para selecionar",
+            True,
+            WHITE
+        )
+
+        screen.blit(
+            info,
+            (
+                SCREEN_W//2 - info.get_width()//2,
+                SCREEN_H - 80
+            )
+        )
+
         pygame.display.flip()
-        clock.tick(60)
-
-    

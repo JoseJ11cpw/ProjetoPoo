@@ -6,56 +6,49 @@ class Map:
     def __init__(self, file):
         self.tmx = load_pygame(file)
 
-        # tamanho do mundo (SEM escala)
         self.map_w = self.tmx.width * self.tmx.tilewidth
         self.map_h = self.tmx.height * self.tmx.tileheight
 
-        # surface do mapa no tamanho real do mundo
-        self.surface = pygame.Surface((self.map_w, self.map_h))
+        self.ground_surface = pygame.Surface((self.map_w, self.map_h))
+        self.foreground_surface = pygame.Surface((self.map_w, self.map_h), pygame.SRCALPHA)
 
         self.draw_map()
 
         # ---------------- COLISÕES ----------------
         self.collisions = []
-
         for obj in self.tmx.objects:
             if obj.name == "wall":
-                rect = pygame.Rect(
-                    obj.x,
-                    obj.y,
-                    obj.width,
-                    obj.height
-                )
+                rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
                 self.collisions.append(rect)
 
         # ---------------- PORTAS ----------------
         self.doors = []
-
         for obj in self.tmx.objects:
             if obj.name == "door":
-                rect = pygame.Rect(
-                    obj.x,
-                    obj.y,
-                    obj.width,
-                    obj.height
-                )
+                rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
                 self.doors.append(rect)
 
-    # ---------------- DESENHAR MAPA ----------------
     def draw_map(self):
         TILE = self.tmx.tilewidth
 
         for layer in self.tmx.visible_layers:
+            nome_camada = layer.name.lower()
+
+            #copas da arvore
             if hasattr(layer, "tiles"):
                 for x, y, gid in layer:
                     tile = self.tmx.get_tile_image_by_gid(gid)
                     if tile:
-                        self.surface.blit(tile, (x * TILE, y * TILE))
+                        if "copa" in nome_camada:
+                            self.foreground_surface.blit(tile, (x * TILE, y * TILE))
+                        else:
+                            self.ground_surface.blit(tile, (x * TILE, y * TILE))
 
-    # ---------------- RENDER (COM CAMERA) ----------------
-    def render(self, surface):
-        # desenha o mapa completo no mundo
-        surface.blit(self.surface, (0, 0))
+    def render_ground(self, surface):
+        surface.blit(self.ground_surface, (0, 0))
+
+    def render_foreground(self, surface):
+        surface.blit(self.foreground_surface, (0, 0))
 
 class Barco:
 

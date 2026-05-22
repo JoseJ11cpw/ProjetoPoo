@@ -1,37 +1,40 @@
 import pygame
 
-import pygame
 
+# ---------------- FADE OUT ----------------
+def fade_out(screen, clock):
 
-def fade_in(screen, clock):
+    fade = pygame.Surface(screen.get_size())
 
-    fade_surface = pygame.Surface(screen.get_size())
+    fade.fill((0,0,0))
 
-    fade_surface.fill((0, 0, 0))
+    for alpha in range(0,255,8):
 
-    for alpha in range(255, -1, -8):
+        fade.set_alpha(alpha)
 
-        fade_surface.set_alpha(alpha)
+        screen.blit(fade,(0,0))
 
-        # desenha camada preta por cima
-        screen.blit(fade_surface, (0, 0))
-
-        pygame.display.flip()
+        pygame.display.update()
 
         clock.tick(60)
 
-def fade_out(screen, clock):
 
-    fade_surface = pygame.Surface(screen.get_size())
+# ---------------- FADE IN ----------------
+def fade_in(screen, clock, background):
 
-    fade_surface.fill((0, 0, 0))
+    fade = pygame.Surface(screen.get_size())
 
-    for alpha in range(0, 256, 8):
+    fade.fill((0,0,0))
 
-        fade_surface.set_alpha(alpha)
+    for alpha in range(255,0,-8):
 
-        screen.blit(fade_surface, (0, 0))
+        # REDESENHA O FRAME
+        screen.blit(background,(0,0))
 
-        pygame.display.flip()
+        fade.set_alpha(alpha)
+
+        screen.blit(fade,(0,0))
+
+        pygame.display.update()
 
         clock.tick(60)

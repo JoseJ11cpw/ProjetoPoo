@@ -4,7 +4,7 @@ import math
 class Player:
     def __init__(self):
         # ---------------- SPRITE ----------------
-        self.sprite = pygame.image.load("imagens/Personagem1.png").convert_alpha()
+        self.sprite = pygame.image.load("imagens/Personagens e Objetos/Personagem1.png").convert_alpha()
 
         self.FRAME_COLS = 4
         self.FRAME_ROWS = 4
@@ -210,7 +210,7 @@ class Player:
 
 class NPC:
 
-    def __init__(self, x, y, image, scale=1):
+    def __init__(self, x, y, image, dialogo, scale=1):
 
         self.x = x
         self.y = y
@@ -242,11 +242,7 @@ class NPC:
         self.interaction_rect = self.rect.inflate(80, 80)
 
         # ---------------- DIÁLOGO ----------------
-        self.dialogo = [
-            "Olá aventureiro...",
-            "A floresta foi corrompida.",
-            "Encontra os 3 cristais."
-        ]
+        self.dialogo = dialogo
 
         self.dialogo_ativo = False
         self.dialogo_index = 0
@@ -267,7 +263,7 @@ class NPC:
     def draw(self, screen):
 
         screen.blit(self.image, (self.x, self.y))
-
+        
     # ---------------- VERIFICAR DISTÂNCIA PLAYER ----------------
     def near_player(self, player):
 
