@@ -3,7 +3,7 @@ import pygame
 from mapa import Map, Barco
 from Personagens import Player, NPC, Inimigo
 from camera import Camera
-from menu import menu
+from menu import menu, pause_menu
 from inventario import Inventario, Item
 from efeitos import fade_in
 
@@ -78,7 +78,7 @@ enemy = Inimigo(800,600,"imagens/Personagens e Objetos/Polvo.png")
 barco = Barco(
     600,
     400,
-    "imagens/Personagens e Objetos/barcoAfonso.png"
+    "imagens/Personagens e Objetos/barco.png"
 )
 
 inventario = Inventario()
@@ -91,6 +91,7 @@ moeda = Item(100, 300, "imagens/Personagens e Objetos/moeda.png", "Moeda", 40)
 start_fade = True
 
 # ---------------- LOOP ----------------
+paused = False
 running = True
 while running:
     clock.tick(60)
@@ -102,6 +103,23 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             # FECHAR JOGO
+            if paused:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+
+                    mouse = pygame.mouse.get_pos()
+
+                    # CONTINUAR
+                    if continue_button.collidepoint(mouse):
+
+                        paused = False
+
+                    # SAIR
+                    if quit_button.collidepoint(mouse):
+
+                        running = False
+
+            if event.key == pygame.K_ESCAPE:
+                paused = not paused
             if event.key == pygame.K_TAB:
 
                 inventario.toggle()
@@ -222,8 +240,10 @@ while running:
     npc.update()
     # BLOQUEIA MOVIMENTO DURANTE DIÁLOGO
     if not npc.dialogo_ativo and not inventario.aberto:
-        player.update(keys, game_map)
+        if not paused:
 
+            player.update(keys, game_map)
+            
     # UPDATE CAMERA
     if current_map != "house":
         camera.update(player)
@@ -657,6 +677,14 @@ while running:
             )
 
     # ---------------- UPDATE SCREEN ----------------
+    if paused:
+
+       continue_button, quit_button = pause_menu(
+    screen,
+    SCREEN_W,
+    SCREEN_H
+)   
+
     pygame.display.flip()
     
 pygame.quit()

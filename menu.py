@@ -210,3 +210,163 @@ def menu():
         )
 
         pygame.display.flip()
+# ---------------- MENU PAUSA ----------------
+# ---------------- MENU PAUSA ----------------
+def pause_menu(screen, SCREEN_W, SCREEN_H):
+
+    mouse = pygame.mouse.get_pos()
+
+    # OVERLAY
+    overlay = pygame.Surface(
+        (SCREEN_W, SCREEN_H),
+        pygame.SRCALPHA
+    )
+
+    overlay.fill((0,0,0,180))
+
+    screen.blit(overlay, (0,0))
+
+    # ---------------- CAIXA ----------------
+    rect = pygame.Rect(
+        SCREEN_W//2 - 300,
+        SCREEN_H//2 - 220,
+        600,
+        400
+    )
+
+    pygame.draw.rect(
+        screen,
+        (220,200,160),
+        rect,
+        border_radius=12
+    )
+
+    pygame.draw.rect(
+        screen,
+        (80,50,20),
+        rect,
+        6,
+        border_radius=12
+    )
+
+    # ---------------- FONTES ----------------
+    title_font = pygame.font.Font(
+        "fontes/PressStart2P-Regular.ttf",
+        40
+    )
+
+    button_font = pygame.font.Font(
+        "fontes/PressStart2P-Regular.ttf",
+        20
+    )
+
+    # ---------------- TÍTULO ----------------
+    title = title_font.render(
+        "PAUSA",
+        True,
+        (20,20,20)
+    )
+
+    screen.blit(
+        title,
+        (
+            rect.centerx - title.get_width()//2,
+            rect.y + 50
+        )
+    )
+
+    # ---------------- BOTÕES ----------------
+    continue_button = pygame.Rect(
+        rect.centerx - 180,
+        rect.y + 150,
+        360,
+        70
+    )
+
+    quit_button = pygame.Rect(
+        rect.centerx - 180,
+        rect.y + 260,
+        360,
+        70
+    )
+
+    # HOVER
+    continue_color = (220,200,160)
+
+    if continue_button.collidepoint(mouse):
+
+        continue_color = (255,230,180)
+
+    quit_color = (220,200,160)
+
+    if quit_button.collidepoint(mouse):
+
+        quit_color = (255,230,180)
+
+    # DESENHAR BOTÕES
+    pygame.draw.rect(
+        screen,
+        continue_color,
+        continue_button,
+        border_radius=8
+    )
+
+    pygame.draw.rect(
+        screen,
+        (80,50,20),
+        continue_button,
+        4,
+        border_radius=8
+    )
+
+    pygame.draw.rect(
+        screen,
+        quit_color,
+        quit_button,
+        border_radius=8
+    )
+
+    pygame.draw.rect(
+        screen,
+        (80,50,20),
+        quit_button,
+        4,
+        border_radius=8
+    )
+
+    # ---------------- TEXTO ----------------
+    continue_text = button_font.render(
+        "CONTINUAR",
+        True,
+        (20,20,20)
+    )
+
+    quit_text = button_font.render(
+        "SAIR",
+        True,
+        (20,20,20)
+    )
+
+    screen.blit(
+        continue_text,
+        (
+            continue_button.centerx
+            - continue_text.get_width()//2,
+
+            continue_button.centery
+            - continue_text.get_height()//2
+        )
+    )
+
+    screen.blit(
+        quit_text,
+        (
+            quit_button.centerx
+            - quit_text.get_width()//2,
+
+            quit_button.centery
+            - quit_text.get_height()//2
+        )
+    )
+
+    return continue_button, quit_button
