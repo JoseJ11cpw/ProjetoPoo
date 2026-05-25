@@ -5,50 +5,92 @@ from Personagens import Player, NPC, Inimigo
 from camera import Camera
 from menu import menu, pause_menu
 from inventario import Inventario, Item
-from efeitos import fade_in
+from efeitos import fade_in, fade_out
+
+
+def draw_interaction_ui(screen, font, action, SCREEN_W, SCREEN_H):
+
+    ui_rect = pygame.Rect(SCREEN_W // 2 - 140, SCREEN_H - 120, 220, 60)
+
+    # fundo
+    ui_surface = pygame.Surface((220, 60), pygame.SRCALPHA)
+
+    pygame.draw.rect(ui_surface, (0,0,0,180), (0,0,220,60), border_radius=12)
+
+    screen.blit(ui_surface, ui_rect.topleft)
+
+    # borda
+    pygame.draw.rect(screen, (255,255,255), ui_rect, 2, border_radius=12)
+
+    # tecla
+    key_rect = pygame.Rect(ui_rect.x + 10, ui_rect.y + 10, 40, 40)
+
+    pygame.draw.rect(screen, (255,255,255), key_rect, border_radius=8)
+
+    e_text = font.render("E", True, (0,0,0))
+
+    screen.blit(e_text, (
+        key_rect.centerx - e_text.get_width() // 2,
+        key_rect.centery - e_text.get_height() // 2
+    ))
+
+    # texto
+    action_text = font.render(action, True, (255,255,255))
+
+    screen.blit(action_text, (
+        key_rect.right + 20,
+        ui_rect.y + 12
+    ))
+
 
 pygame.init()
 
-# ---------------- Músicas/Efeitos Sonoros ----------------
+# musicas e efeitos
 pygame.mixer.music.load("musicas/musicaLoop.wav")
 som_porta = pygame.mixer.Sound("musicas/Porta.mp3")
 
 pygame.mixer.music.play(-1)
-# ---------------- SCREEN ----------------
+
+# screen
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 SCREEN_W, SCREEN_H = screen.get_size()
 
 clock = pygame.time.Clock()
 
-# ---------------- MENU ----------------
+# menu
 menu()
 
-# ---------------- FONTES ----------------
+screen.fill((0,0,0))
+
+pygame.display.flip()
+
+# fontes
 font = pygame.font.SysFont(None, 40)
 
-# ---------------- MAPAS ----------------
+# mapas
 outside_map = Map("mapa.tmx")
 house_map = Map("casa.tmx")
-ilha= Map("ilha.tmx")
+ilha = Map("ilha.tmx")
 
 current_map = "outside"
 
 game_map = outside_map
 
-# ---------------- CAMERA ----------------
+# camera
 camera = Camera(
     SCREEN_W,
     SCREEN_H,
     game_map.map_w,
     game_map.map_h
 )
+
 world = pygame.Surface((game_map.map_w, game_map.map_h))
 
-# ---------------- PLAYER ----------------
+# player
 player = Player()
 
-# ---------------- NPC ----------------
+# npc
 npc = NPC(
     800,
     200,
@@ -72,99 +114,120 @@ npcMenina = NPC(
     ],
     scale=1
 )
+
 npc_ativo = None
 
-enemy = Inimigo(800,600,"imagens/Personagens e Objetos/Polvo.png")
+# inimigo
+enemy = Inimigo(
+    800,
+    600,
+    "imagens/Personagens e Objetos/Polvo.png"
+)
+
+# barco
 barco = Barco(
     600,
     400,
     "imagens/Personagens e Objetos/barco.png"
 )
 
+# inventario
 inventario = Inventario()
+
 mochila = pygame.image.load("imagens/Personagens e Objetos/mochila.png").convert_alpha()
-mochila = pygame.transform.scale(mochila,(48,48))
 
-moeda = Item(100, 300, "imagens/Personagens e Objetos/moeda.png", "Moeda", 40)
+mochila = pygame.transform.scale(mochila, (48,48))
 
-# ---------------- FADE ----------------
+# item
+moeda = Item(
+    100,
+    300,
+    "imagens/Personagens e Objetos/moeda.png",
+    "Moeda",
+    40
+)
+
+# fade
 start_fade = True
 
-# ---------------- LOOP ----------------
+# loop
 paused = False
 running = True
+
 while running:
+
     clock.tick(60)
-    # ---------------- EVENTS ----------------
+
+    # events
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
             running = False
 
-        if event.type == pygame.KEYDOWN:
-            # FECHAR JOGO
+        # mouse
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
             if paused:
-                if event.type == pygame.MOUSEBUTTONDOWN:
 
-                    mouse = pygame.mouse.get_pos()
+                mouse = pygame.mouse.get_pos()
 
-                    # CONTINUAR
-                    if continue_button.collidepoint(mouse):
+                if continue_button.collidepoint(mouse):
+                    paused = False
 
-                        paused = False
+                if quit_button.collidepoint(mouse):
+                    running = False
 
-                    # SAIR
-                    if quit_button.collidepoint(mouse):
+        # teclado
+        if event.type == pygame.KEYDOWN:
 
-                        running = False
-
+            # pause
             if event.key == pygame.K_ESCAPE:
                 paused = not paused
-            if event.key == pygame.K_TAB:
 
+            # inventario
+            if event.key == pygame.K_TAB:
                 inventario.toggle()
-            # INTERAÇÃO NPC
+
+            # interacoes
             if event.key == pygame.K_e:
-                # ---------------- BARCO ----------------
-                if current_map =="outside":
+
+                # barco
+                if current_map == "outside":
 
                     if barco.near_player(player):
+
+                        fade_out(screen, clock)
 
                         game_map = ilha
 
                         current_map = "ilha"
-
+                        start_fade = True
                         player.x = 600
                         player.y = 400
 
-                        # RESET WORLD
-                        world = pygame.Surface(
-                            (game_map.map_w, game_map.map_h)
-                        )
-
-                        # RESET CAMERA
-                        camera = Camera(
-                            SCREEN_W,
-                            SCREEN_H,
-                            game_map.map_w,
-                            game_map.map_h
-                        )
-
-
+                # npc preto
                 if npc.near_player(player):
+
                     npc.dialogo_ativo = True
+
                     npc_ativo = npc
 
+                # npc menina
                 if npcMenina.near_player(player):
+
                     npcMenina.dialogo_ativo = True
+
                     npc_ativo = npcMenina
 
+                # porta
                 elif player.near_door(game_map):
+
                     som_porta.play()
-                    # ENTRAR / SAIR CASA
+
                     if current_map == "outside":
-                        
+
                         game_map = house_map
+
                         current_map = "house"
 
                         player.x = 340
@@ -173,24 +236,22 @@ while running:
                     else:
 
                         game_map = outside_map
+
                         current_map = "outside"
 
                         player.x = 228
                         player.y = 70
 
-                    # RESET WORLD
-                    world = pygame.Surface(
-                        (game_map.map_w, game_map.map_h)
-                    )
+                    world = pygame.Surface((game_map.map_w, game_map.map_h))
 
-                    # RESET CAMERA
                     camera = Camera(
                         SCREEN_W,
                         SCREEN_H,
                         game_map.map_w,
                         game_map.map_h
                     )
-                                # APANHAR ITEM
+
+                # apanhar item
                 if moeda.near_player(player):
 
                     if not moeda.apanhado:
@@ -198,7 +259,8 @@ while running:
                         inventario.add_item(moeda)
 
                         moeda.apanhado = True
-            # AVANÇAR DIÁLOGO
+
+            # dialogos
             for personagem in [npc, npcMenina]:
 
                 if personagem.dialogo_ativo:
@@ -207,16 +269,18 @@ while running:
 
                         full_text = personagem.dialogo[personagem.dialogo_index]
 
-                        # TERMINA TEXTO INSTANTANEAMENTE
+                        # termina texto
                         if personagem.char_index < len(full_text):
 
                             personagem.char_index = len(full_text)
+
                             personagem.texto_visivel = full_text
 
-                        # AVANÇA DIÁLOGO
+                        # avanca dialogo
                         else:
 
                             personagem.char_index = 0
+
                             personagem.texto_visivel = ""
 
                             personagem.dialogo_index += 1
@@ -224,467 +288,214 @@ while running:
                             if personagem.dialogo_index >= len(personagem.dialogo):
 
                                 personagem.dialogo_ativo = False
+
                                 personagem.dialogo_index = 0
 
-                        if personagem.dialogo_index >= len(personagem.dialogo):
-
-                            personagem.dialogo_ativo = False
-                            personagem.dialogo_index = 0
-
-    # ---------------- UPDATE ----------------
+    # update
     keys = pygame.key.get_pressed()
-    if current_map =="ilha":
+
+    # inimigo
+    if current_map == "ilha":
+
         enemy.update(player)
+
         enemy.attack_player(player)
 
     npc.update()
-    # BLOQUEIA MOVIMENTO DURANTE DIÁLOGO
+
+    # movimento
     if not npc.dialogo_ativo and not inventario.aberto:
+
         if not paused:
 
             player.update(keys, game_map)
-            
-    # UPDATE CAMERA
+
+    # camera
     if current_map != "house":
         camera.update(player)
 
-    # ---------------- DRAW WORLD ----------------
-    game_map.render_ground(world)  # 1. Desenha o chão
+    # draw world
+    game_map.render_ground(world)
 
+    # draw mapa
     if current_map == "outside":
+
         npc.draw(world)
+
         moeda.draw(world)
+
         barco.draw(world)
+
     if current_map == "house":
         npcMenina.draw(world)
+
     if current_map == "ilha":
         enemy.draw(world)
 
-    player.draw(world)             # 2. Desenha o Jogador
+    # player
+    player.draw(world)
 
-    game_map.render_foreground(world) # 3. Desenha as copas por cima do jogador
+    # foreground
+    game_map.render_foreground(world)
 
-    # ---------------- CAMERA VIEW ----------------
+    # camera view
     view_w = int(SCREEN_W / camera.zoom)
     view_h = int(SCREEN_H / camera.zoom)
 
     if current_map == "house":
+
         cam_x = (game_map.map_w - view_w) // 2
         cam_y = (game_map.map_h - view_h) // 2
+
     else:
+
         cam_x = int(camera.offset_x)
         cam_y = int(camera.offset_y)
 
-    # ---------------- FIX CRÍTICO ----------------
-    # garantir que a "janela da câmera" não é maior que o mapa
+    # limitar camera
     view_w = min(view_w, game_map.map_w)
     view_h = min(view_h, game_map.map_h)
 
-    # clamp seguro
     max_x = max(0, game_map.map_w - view_w)
     max_y = max(0, game_map.map_h - view_h)
 
     cam_x = max(0, min(cam_x, max_x))
     cam_y = max(0, min(cam_y, max_y))
 
-    camera_rect = pygame.Rect(
-        cam_x,
-        cam_y,
-        view_w,
-        view_h
-    )
+    camera_rect = pygame.Rect(cam_x, cam_y, view_w, view_h)
 
-    # segurança extra (evita crash 100%)
     camera_rect.width = min(camera_rect.width, world.get_width())
     camera_rect.height = min(camera_rect.height, world.get_height())
 
-    # ---------------- SUBSURFACE SAFE ----------------
+    # subsurface
     view = world.subsurface(camera_rect)
-    scaled = pygame.transform.scale(
-    view,
-    (SCREEN_W, SCREEN_H)
-)
+
+    scaled = pygame.transform.scale(view, (SCREEN_W, SCREEN_H))
 
     screen.blit(scaled, (0, 0))
-    screen.blit(scaled, (0, 0))
 
-    # ---------------- FADE IN ----------------
+    # fade
     if start_fade:
 
         fade_in(screen, clock, scaled)
 
         start_fade = False
+
+    # vida
     player.draw_health(screen)
-    # ---------------- UI INVENTÁRIO ----------------
 
-    bag_rect = pygame.Rect(
-        SCREEN_W - 90,
-        20,
-        60,
-        60
-    )
+    # ui inventario
+    bag_rect = pygame.Rect(SCREEN_W - 90, 20, 60, 60)
 
-    # FUNDO
-    pygame.draw.rect(
-        screen,
-        (30,30,30),
-        bag_rect,
-        border_radius=12
-    )
+    pygame.draw.rect(screen, (30,30,30), bag_rect, border_radius=12)
 
-    # BORDA
-    pygame.draw.rect(
-        screen,
-        (255,255,255),
-        bag_rect,
-        2,
-        border_radius=12
-    )
+    pygame.draw.rect(screen, (255,255,255), bag_rect, 2, border_radius=12)
 
-    # IMG
-    screen.blit(
-        mochila,
-        (bag_rect.x + 6, bag_rect.y + 6)
-    )
-    tab_text = font.render("TAB",True,(255,255,255))
+    screen.blit(mochila, (bag_rect.x + 6, bag_rect.y + 6))
 
-    screen.blit(tab_text,(bag_rect.x - 70,bag_rect.y + 20))
+    tab_text = font.render("TAB", True, (255,255,255))
 
-    # ---------------- UI PORTA ----------------
+    screen.blit(tab_text, (bag_rect.x - 70, bag_rect.y + 20))
+
+    # ui porta
     if player.near_door(game_map):
 
-        action = (
-            "Entrar"
-            if current_map == "outside"
-            else "Sair"
-        )
+        action = "Entrar" if current_map == "outside" else "Sair"
 
-        ui_rect = pygame.Rect(
-            SCREEN_W // 2 - 140,
-            SCREEN_H - 120,
-            200,
-            60
-        )
-
-        ui_surface = pygame.Surface(
-            (200, 60),
-            pygame.SRCALPHA
-        )
-
-        pygame.draw.rect(
-            ui_surface,
-            (0, 0, 0, 180),
-            (0, 0, 200, 60),
-            border_radius=12
-        )
-
-        screen.blit(ui_surface, ui_rect.topleft)
-
-        pygame.draw.rect(
+        draw_interaction_ui(
             screen,
-            (255, 255, 255),
-            ui_rect,
-            2,
-            border_radius=12
-        )
-
-        key_rect = pygame.Rect(
-            ui_rect.x + 10,
-            ui_rect.y + 10,
-            40,
-            40
-        )
-
-        pygame.draw.rect(
-            screen,
-            (255, 255, 255),
-            key_rect,
-            border_radius=8
-        )
-
-        e_text = font.render(
-            "E",
-            True,
-            (0, 0, 0)
-        )
-
-        screen.blit(
-            e_text,
-            (
-                key_rect.centerx - e_text.get_width() // 2,
-                key_rect.centery - e_text.get_height() // 2
-            )
-        )
-
-        action_text = font.render(
+            font,
             action,
-            True,
-            (255, 255, 255)
+            SCREEN_W,
+            SCREEN_H
         )
 
-        screen.blit(
-            action_text,
-            (key_rect.right + 20, ui_rect.y + 12)
-        )
-    # ---------------- UI ITEM ----------------
+    # ui item
     if moeda.near_player(player):
 
-        if not moeda.apanhado:
+        if current_map == "outside":
 
-            action = "Apanhar"
+            if not moeda.apanhado:
 
-            ui_rect = pygame.Rect(
-                SCREEN_W // 2 - 140,
-                SCREEN_H - 200,
-                220,
-                60
-            )
-
-            ui_surface = pygame.Surface(
-                (220, 60),
-                pygame.SRCALPHA
-            )
-
-            pygame.draw.rect(
-                ui_surface,
-                (0,0,0,180),
-                (0,0,220,60),
-                border_radius=12
-            )
-
-            screen.blit(ui_surface, ui_rect.topleft)
-
-            pygame.draw.rect(
-                screen,
-                (255,255,255),
-                ui_rect,
-                2,
-                border_radius=12
-            )
-
-            key_text = font.render(
-                "E",
-                True,
-                (255,255,255)
-            )
-
-            text = font.render(
-                action,
-                True,
-                (255,255,255)
-            )
-
-            screen.blit(
-                key_text,
-                (ui_rect.x + 20, ui_rect.y + 12)
-            )
-
-            screen.blit(
-                text,
-                (ui_rect.x + 60, ui_rect.y + 12)
-            )
-    # ---------------- UI NPC preto ----------------
-    if current_map == "outside":
-
-        if npc.near_player(player) and not npc.dialogo_ativo :
-            action="Falar"
-            ui_rect = pygame.Rect(SCREEN_W // 2 - 140,SCREEN_H - 120,200,60)
-
-            ui_surface = pygame.Surface(
-                (200, 60),
-                pygame.SRCALPHA
-            )
-
-            pygame.draw.rect(
-                ui_surface,
-                (0, 0, 0, 180),
-                (0, 0, 200, 60),
-                border_radius=12
-            )
-
-            screen.blit(ui_surface, ui_rect.topleft)
-
-            pygame.draw.rect(
-                screen,
-                (255, 255, 255),
-                ui_rect,
-                2,
-                border_radius=12
-            )
-
-            key_rect = pygame.Rect(
-                ui_rect.x + 10,
-                ui_rect.y + 10,
-                40,
-                40
-            )
-
-            pygame.draw.rect(
-                screen,
-                (255, 255, 255),
-                key_rect,
-                border_radius=8
-            )
-
-            e_text = font.render(
-                "E",
-                True,
-                (0, 0, 0)
-            )
-            action_text = font.render(action,True,(255, 255, 255))
-
-            screen.blit(
-                e_text,
-                (
-                    key_rect.centerx - e_text.get_width() // 2,
-                    key_rect.centery - e_text.get_height() // 2
+                draw_interaction_ui(
+                    screen,
+                    font,
+                    "Apanhar",
+                    SCREEN_W,
+                    SCREEN_H
                 )
-            )
-            screen.blit(
-            action_text,
-            (key_rect.right + 20, ui_rect.y + 12)
-        )
-     # npc menina       
-    if current_map == "house":
 
-        if npcMenina.near_player(player) and not npcMenina.dialogo_ativo :
+    # ui npc preto
+    if npc.near_player(player):
 
-            action="Falar"
-            ui_rect = pygame.Rect(SCREEN_W // 2 - 140,SCREEN_H - 120,200,60)
+        if current_map == "outside":
 
-            ui_surface = pygame.Surface(
-                (200, 60),
-                pygame.SRCALPHA
-            )
-
-            pygame.draw.rect(
-                ui_surface,
-                (0, 0, 0, 180),
-                (0, 0, 200, 60),
-                border_radius=12
-            )
-
-            screen.blit(ui_surface, ui_rect.topleft)
-
-            pygame.draw.rect(
+            draw_interaction_ui(
                 screen,
-                (255, 255, 255),
-                ui_rect,
-                2,
-                border_radius=12
+                font,
+                "Falar",
+                SCREEN_W,
+                SCREEN_H
             )
 
-            key_rect = pygame.Rect(
-                ui_rect.x + 10,
-                ui_rect.y + 10,
-                40,
-                40
-            )
+    # ui npc menina
+    if npcMenina.near_player(player):
 
-            pygame.draw.rect(
+        if current_map == "house":
+
+            draw_interaction_ui(
                 screen,
-                (255, 255, 255),
-                key_rect,
-                border_radius=8
+                font,
+                "Falar",
+                SCREEN_W,
+                SCREEN_H
             )
 
-            e_text = font.render(
-                "E",
-                True,
-                (0, 0, 0)
-            )
-            action_text = font.render(action,True,(255, 255, 255))
+    # ui barco
+    if barco.near_player(player):
 
-            screen.blit(
-                e_text,
-                (
-                    key_rect.centerx - e_text.get_width() // 2,
-                    key_rect.centery - e_text.get_height() // 2
-                )
+        if current_map == "outside":
+
+            draw_interaction_ui(
+                screen,
+                font,
+                "Viajar",
+                SCREEN_W,
+                SCREEN_H
             )
-            screen.blit(
-            action_text,
-            (key_rect.right + 20, ui_rect.y + 12)
-        )
+
+    # inventario
     if inventario.aberto:
 
-        inventario.draw(screen,font,SCREEN_W,SCREEN_H)
+        inventario.draw(
+            screen,
+            font,
+            SCREEN_W,
+            SCREEN_H
+        )
 
+    # dialogo
     if npc_ativo and npc_ativo.dialogo_ativo:
-        npc.update_dialogo()
-        npc.draw_dialogo(screen,font,SCREEN_W,SCREEN_H)
 
-    if npcMenina.dialogo_ativo:
-        npcMenina.update_dialogo()
-        npcMenina.draw_dialogo(screen,font,SCREEN_W,SCREEN_H)
+        npc_ativo.update_dialogo()
 
-    # ---------------- UI BARCO ----------------
-    if current_map =="outside":
+        npc_ativo.draw_dialogo(
+            screen,
+            font,
+            SCREEN_W,
+            SCREEN_H
+        )
 
-        if barco.near_player(player):
-
-            action = "Viajar"
-
-            ui_rect = pygame.Rect(
-                SCREEN_W // 2 - 140,
-                SCREEN_H - 120,
-                220,
-                60
-            )
-
-            ui_surface = pygame.Surface(
-                (220, 60),
-                pygame.SRCALPHA
-            )
-
-            pygame.draw.rect(
-                ui_surface,
-                (0,0,0,180),
-                (0,0,220,60),
-                border_radius=12
-            )
-
-            screen.blit(ui_surface, ui_rect.topleft)
-
-            pygame.draw.rect(
-                screen,
-                (255,255,255),
-                ui_rect,
-                2,
-                border_radius=12
-            )
-
-            key_text = font.render(
-                "E",
-                True,
-                (255,255,255)
-            )
-
-            text = font.render(
-                action,
-                True,
-                (255,255,255)
-            )
-
-            screen.blit(
-                key_text,
-                (ui_rect.x + 20, ui_rect.y + 12)
-            )
-
-            screen.blit(
-                text,
-                (ui_rect.x + 60, ui_rect.y + 12)
-            )
-
-    # ---------------- UPDATE SCREEN ----------------
+    # pause menu
     if paused:
 
-       continue_button, quit_button = pause_menu(
-    screen,
-    SCREEN_W,
-    SCREEN_H
-)   
+        continue_button, quit_button = pause_menu(
+            screen,
+            SCREEN_W,
+            SCREEN_H
+        )
 
+    # update screen
     pygame.display.flip()
-    
+
 pygame.quit()
